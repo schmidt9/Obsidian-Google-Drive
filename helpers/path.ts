@@ -8,7 +8,7 @@ const PART_NUMBER_SUFFIX_LENGTH = 3
 const MAX_KEY_VALUE_LENGTH = 124
 
 export const splitPath = (pathKey: string, pathValue: string) => {
-    
+
     const result: Record<string, string> = {}
 
     if (pathKey.length == 0 || pathValue.length == 0) {

@@ -8,6 +8,7 @@ import {
 	getSyncMessage,
 } from "./drive";
 import { pull } from "./pull";
+import { splitPath } from "./path"
 
 class ConfirmPushModal extends Modal {
 	proceed: (res: boolean) => void;
@@ -318,7 +319,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 							parent: folder.parent
 								? pathsToIds[folder.parent.path]
 								: undefined,
-							properties: { path: folder.path },
+							properties: splitPath("path", folder.path),
 							modifiedTime: new Date().toISOString(),
 						});
 						if (!id) {
@@ -348,7 +349,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 					note.name,
 					note.parent ? pathsToIds[note.parent.path] : undefined,
 					{
-						properties: { path: note.path },
+						properties: splitPath("path", note.path),
 						modifiedTime: new Date().toISOString(),
 					}
 				);
