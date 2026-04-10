@@ -31,6 +31,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	changesToken: "",
 };
 
+const PATH_PART_DIVIDER = "_"
+
 export default class ObsidianGoogleDrive extends Plugin {
 	settings: PluginSettings;
 	accessToken = {
@@ -301,6 +303,70 @@ export default class ObsidianGoogleDrive extends Plugin {
 		this.ribbonIcon.removeClass("spin");
 		this.syncing = false;
 		syncNotice?.hide();
+	}
+
+	splitPath(pathKey: string, pathValue: string) {
+		// Maximum of 124 bytes size limit on (key + value) string in UTF-8 encoding for a single property
+		// https://developers.google.com/workspace/drive/api/reference/rest/v2/properties
+		const result: Record<string, string> = {}
+
+		if (pathKey.length == 0 || pathValue.length == 0) {
+			return result
+		}
+		
+		const MAX_KEY_VALUE_LENGTH = 124
+		const PATH_PART_SUFFIX_LENGTH = PATH_PART_DIVIDER.length + 3 // reserve number symbols for part numbers
+
+		const keyLength = pathKey.length
+		const maxValueLength = MAX_KEY_VALUE_LENGTH - PATH_PART_SUFFIX_LENGTH - keyLength
+
+		if (maxValueLength <= 0) {
+			// it can happen if key is very long
+			return result
+		}
+
+		const partsCount = Math.ceil(pathValue.length / maxValueLength)
+		var offset = 0
+		
+		for (let i = 0; i < partsCount; i++) {
+			const key = i == 0 ? pathKey : pathKey + PATH_PART_DIVIDER + i
+			const value = pathValue.substring(offset, offset + maxValueLength)
+			result[key] = value
+
+			offset += maxValueLength
+		}
+
+		return result
+	}
+
+	joinPath(pathKey: string, properties: Record<string, string>) {
+		const result = ""
+		const pathKeyWithDivider = pathKey + PATH_PART_DIVIDER
+
+		const path = Object.entries(properties)
+		.filter(([key, _]) => {
+			return key === pathKey || key.startsWith(pathKeyWithDivider)
+		})
+		.sort((v1, v2) => {
+			const key1 = v1[0]
+			const key1Index = Number(key1.split(PATH_PART_DIVIDER)[1])
+
+			const key2 = v2[0]
+			const key2Index = Number(key2.split(PATH_PART_DIVIDER)[1])
+
+			if (Number.isNaN(key1Index) || Number.isNaN(key2Index)) {
+				return -1;
+			}
+
+			return key1Index - key2Index
+		})
+		.reduce((acc, v) => {
+			return acc + v[1]
+		}, "")
+
+		console.log(path)
+
+		return result
 	}
 }
 
