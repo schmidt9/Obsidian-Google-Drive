@@ -1,4 +1,5 @@
-const PATH_PART_DIVIDER = "_"
+const PART_DIVIDER = "_"
+const PART_NUMBER_SUFFIX_LENGTH = 3
 
 /**
  * Maximum of 124 bytes size limit on (key + value) string in UTF-8 encoding for a single property
@@ -14,7 +15,7 @@ export const splitPath = (pathKey: string, pathValue: string) => {
         return result
     }
 
-    const pathPartSuffixLength = PATH_PART_DIVIDER.length + 3 // reserve number symbols for part numbers
+    const pathPartSuffixLength = PART_DIVIDER.length + PART_NUMBER_SUFFIX_LENGTH
 
     const keyLength = pathKey.length
     const maxValueLength = MAX_KEY_VALUE_LENGTH - pathPartSuffixLength - keyLength
@@ -28,7 +29,7 @@ export const splitPath = (pathKey: string, pathValue: string) => {
     var offset = 0
 
     for (let i = 0; i < partsCount; i++) {
-        const key = i == 0 ? pathKey : pathKey + PATH_PART_DIVIDER + i
+        const key = i == 0 ? pathKey : pathKey + PART_DIVIDER + i
         const value = pathValue.substring(offset, offset + maxValueLength)
         result[key] = value
 
@@ -39,7 +40,7 @@ export const splitPath = (pathKey: string, pathValue: string) => {
 }
 
 export const joinPath = (pathKey: string, properties: Record<string, string>) => {
-    const pathKeyWithDivider = pathKey + PATH_PART_DIVIDER
+    const pathKeyWithDivider = pathKey + PART_DIVIDER
 
     return Object.entries(properties)
         .filter(([key, _]) => {
@@ -47,10 +48,10 @@ export const joinPath = (pathKey: string, properties: Record<string, string>) =>
         })
         .sort((v1, v2) => {
             const key1 = v1[0]
-            const key1Index = Number(key1.split(PATH_PART_DIVIDER)[1])
+            const key1Index = Number(key1.split(PART_DIVIDER)[1])
 
             const key2 = v2[0]
-            const key2Index = Number(key2.split(PATH_PART_DIVIDER)[1])
+            const key2Index = Number(key2.split(PART_DIVIDER)[1])
 
             if (Number.isNaN(key1Index)) {
                 return -1;
