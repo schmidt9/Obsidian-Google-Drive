@@ -4,11 +4,23 @@ import * as path from "./helpers/path"
 
 describe("Path tests", () => {
 
-    const fileName = "test note with a long long long long long long long long long long long long long long long long long long name longer than 124 bytes.md"
+    const shortFileName = "test note with a short name.md"
+    const longFileName = "test note with a long long long long long long long long long long long long long long long long long long name longer than 124 bytes.md"
     const pathKey = "path"
 
     test("splitPath", () => {
-        const result = path.splitPath(pathKey, fileName)
+        // test short name
+
+        var result = path.splitPath(pathKey, shortFileName)
+
+        console.log(result)
+
+        assert.equal(Object.keys(result).length, 1)
+        assert.strictEqual(result["path"], shortFileName)
+
+        // test long name
+
+        result = path.splitPath(pathKey, longFileName)
 
         console.log(result)
 
@@ -18,10 +30,19 @@ describe("Path tests", () => {
     })
 
     test("joinPath", () => {
-        const properties = path.splitPath(pathKey, fileName)
-        const result = path.joinPath(pathKey, properties)
+        // test short name
 
-        assert.strictEqual(result, fileName)
+        var properties = path.splitPath(pathKey, shortFileName)
+        var result = path.joinPath(pathKey, properties)
+
+        assert.strictEqual(result, shortFileName)
+
+        // test long name
+
+        properties = path.splitPath(pathKey, longFileName)
+        result = path.joinPath(pathKey, properties)
+
+        assert.strictEqual(result, longFileName)
     })
 
 })
