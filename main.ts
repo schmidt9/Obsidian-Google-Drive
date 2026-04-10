@@ -340,10 +340,9 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	joinPath(pathKey: string, properties: Record<string, string>) {
-		const result = ""
 		const pathKeyWithDivider = pathKey + PATH_PART_DIVIDER
 
-		const path = Object.entries(properties)
+		return Object.entries(properties)
 		.filter(([key, _]) => {
 			return key === pathKey || key.startsWith(pathKeyWithDivider)
 		})
@@ -363,10 +362,6 @@ export default class ObsidianGoogleDrive extends Plugin {
 		.reduce((acc, v) => {
 			return acc + v[1]
 		}, "")
-
-		console.log(path)
-
-		return result
 	}
 }
 
