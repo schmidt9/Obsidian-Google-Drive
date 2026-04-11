@@ -1,3 +1,5 @@
+import { FileMetadata } from "./drive"
+
 const PART_DIVIDER = "_"
 const PART_NUMBER_SUFFIX_LENGTH = 3
 
@@ -66,4 +68,10 @@ export const joinPath = (pathKey: string, properties: Record<string, string>) =>
         .reduce((acc, v) => {
             return acc + v[1]
         }, "")
+}
+
+export const updatePath = (metadata: FileMetadata) => {
+    if (metadata.properties) {
+        metadata.properties.path = joinPath("path", metadata.properties);
+    }
 }
