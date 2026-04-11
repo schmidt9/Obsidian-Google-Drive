@@ -2,8 +2,11 @@ import { FileMetadata } from "./drive"
 
 export const PATH_KEY = "path"
 const PART_DIVIDER = "_"
-const PART_NUMBER_SUFFIX_LENGTH = 3
-
+/**
+ * 2 digits for part number should be enough to cover max custom properties count
+ * see https://developers.google.com/workspace/drive/api/reference/rest/v2/properties
+ */
+const PART_NUMBER_SUFFIX_LENGTH = 2
 /**
  * Maximum of 124 bytes size limit on (key + value) string in UTF-8 encoding for a single property
  * https://developers.google.com/workspace/drive/api/reference/rest/v2/properties
