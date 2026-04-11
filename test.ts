@@ -1,6 +1,7 @@
 import { test, describe } from "node:test"
 import * as assert from "node:assert/strict"
 import * as path from "./helpers/path"
+import { FileMetadata } from "helpers/drive"
 
 describe("Path tests", () => {
 
@@ -43,6 +44,23 @@ describe("Path tests", () => {
         result = path.joinPath(pathKey, properties)
 
         assert.strictEqual(result, longFileName)
+    })
+
+    test("restorePath", () => {
+        var properties = path.splitPath(pathKey, longFileName)
+        const metadata: FileMetadata = {
+            properties: properties,
+            id: "",
+            name: "",
+            description: "",
+            mimeType: "",
+            starred: false,
+            modifiedTime: ""
+        }
+        path.restorePath(metadata)
+    
+        assert.equal(Object.keys(metadata.properties).length, 1)
+        assert.strictEqual(metadata.properties.path, longFileName)
     })
 
 })
