@@ -75,7 +75,7 @@ export const joinPath = (pathKey: string, properties: Record<string, string>) =>
 }
 
 export const restorePath = (metadata: FileMetadata) => {
-    if (metadata.properties) {
+    if (metadata && metadata.properties) {
         metadata.properties.path = joinPath(PATH_KEY, metadata.properties);
 
         // remove path parts since they are already joined in metadata.properties.path
