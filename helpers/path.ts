@@ -1,5 +1,6 @@
 import { FileMetadata } from "./drive"
 
+export const PATH_KEY = "path"
 const PART_DIVIDER = "_"
 const PART_NUMBER_SUFFIX_LENGTH = 3
 
@@ -70,8 +71,15 @@ export const joinPath = (pathKey: string, properties: Record<string, string>) =>
         }, "")
 }
 
-export const updatePath = (metadata: FileMetadata) => {
+export const restorePath = (metadata: FileMetadata) => {
     if (metadata.properties) {
-        metadata.properties.path = joinPath("path", metadata.properties);
+        metadata.properties.path = joinPath(PATH_KEY, metadata.properties);
+
+        // remove path parts since they are already joined in metadata.properties.path
+        Object.keys(metadata.properties).forEach((key) => {
+            if (key.startsWith(PATH_KEY + PART_DIVIDER)) {
+                delete metadata.properties[key]
+            }
+        });
     }
 }

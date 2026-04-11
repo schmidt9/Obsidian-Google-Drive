@@ -6,7 +6,7 @@ describe("Path tests", () => {
 
     const shortFileName = "test note with a short name.md"
     const longFileName = "test note with a long long long long long long long long long long long long long long long long long long name longer than 124 bytes.md"
-    const pathKey = "path"
+    const pathKey = path.PATH_KEY
 
     test("splitPath", () => {
         // test short name
@@ -16,7 +16,7 @@ describe("Path tests", () => {
         console.log(result)
 
         assert.equal(Object.keys(result).length, 1)
-        assert.strictEqual(result["path"], shortFileName)
+        assert.strictEqual(result[path.PATH_KEY], shortFileName)
 
         // test long name
 
@@ -25,8 +25,8 @@ describe("Path tests", () => {
         console.log(result)
 
         assert.equal(Object.keys(result).length, 2)
-        assert.notEqual(result["path"], undefined)
-        assert.notEqual(result["path_1"], undefined)
+        assert.notEqual(result[path.PATH_KEY], undefined)
+        assert.notEqual(result[path.PATH_KEY + "_" + 1], undefined)
     })
 
     test("joinPath", () => {

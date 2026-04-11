@@ -2,7 +2,7 @@ import ky from "ky";
 import ObsidianGoogleDrive from "main";
 import { getDriveKy } from "./ky";
 import { TAbstractFile, TFolder } from "obsidian";
-import { joinPath, updatePath } from "./path";
+import { joinPath, restorePath } from "./path";
 
 export interface FileMetadata {
 	id: string;
@@ -140,7 +140,7 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 		};
 
 		result.files.forEach((file) => {
-			updatePath(file);
+			restorePath(file);
 		});
 
 		return result;
@@ -428,7 +428,7 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 		}[];
 
 		changes.forEach((change) => {
-			updatePath(change.file);
+			restorePath(change.file);
 		});
 
 		return changes;
