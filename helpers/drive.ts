@@ -428,7 +428,7 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 		}[];
 
 		changes.forEach((change) => {
-			restorePath(change.file);
+			restorePath(change.file); // TODO: check if we need this here since file seems to have no properties field here
 		});
 
 		return changes;
