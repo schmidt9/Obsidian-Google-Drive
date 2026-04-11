@@ -2,6 +2,7 @@ import ky from "ky";
 import ObsidianGoogleDrive from "main";
 import { getDriveKy } from "./ky";
 import { TAbstractFile, TFolder } from "obsidian";
+import { joinPath } from "./path";
 
 export interface FileMetadata {
 	id: string;
@@ -132,10 +133,17 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 			)
 			.json<any>();
 		if (!files) return;
-		return files as {
+		
+		const result = files as {
 			nextPageToken?: string;
 			files: FileMetadata[];
 		};
+
+		result.files.forEach((file) => {
+			file.properties.path = joinPath("path", file.properties);
+		});
+
+		return result;
 	};
 
 	const searchFiles = async (
