@@ -293,7 +293,10 @@ export const push = async (t: ObsidianGoogleDrive) => {
 		if (!deleteRequest) {
 			return new Notice("An error occurred deleting Google Drive files.");
 		}
-		deletes.forEach(([path]) => delete t.settings.driveIdToPath[path]);
+		deletes.forEach(([path]) => {
+			const fileId = pathsToIds[path];
+			delete t.settings.driveIdToPath[fileId]
+		});
 	}
 
 	syncNotice.setMessage("Syncing (33%)");
