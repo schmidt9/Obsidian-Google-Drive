@@ -6,11 +6,14 @@ import { FileMetadata } from "helpers/drive"
 describe("Path tests", () => {
 
     const shortFileName = "test note with a short name.md"
-    const longFileName = "test note with a long long long long long long long long long long long long long long long long long long name longer than 124 bytes.md"
+    // 136 bytes in UTF-8 encoding
+    const longFileNameEn = "test note with a long long long long long long long long long long long long long long long long long long name longer than 124 bytes.md"
+    // 241 bytes in UTF-8 encoding
+    const longFileNameRu = "тестовая заметка c длинным длинным длинным длинным длинным длинным длинным длинным длинным длинным именем, которое больше 124 байт.md"
     const pathKey = path.PATH_KEY
 
     test("splitPath", () => {
-        // test short name
+        // test short en name
 
         var result = path.splitPath(pathKey, shortFileName)
 
@@ -19,15 +22,26 @@ describe("Path tests", () => {
         assert.equal(Object.keys(result).length, 1)
         assert.strictEqual(result[path.PATH_KEY], shortFileName)
 
-        // test long name
+        // test long en name
 
-        result = path.splitPath(pathKey, longFileName)
+        result = path.splitPath(pathKey, longFileNameEn)
 
-        console.log(result)
+        console.log("en name: ", result)
 
         assert.equal(Object.keys(result).length, 2)
         assert.notEqual(result[path.PATH_KEY], undefined)
         assert.notEqual(result[path.PATH_KEY + "_" + 1], undefined)
+
+        // test long ru name
+
+        result = path.splitPath(pathKey, longFileNameRu)
+
+        console.log("ru name: ", result)
+
+        assert.equal(Object.keys(result).length, 3)
+        assert.notEqual(result[path.PATH_KEY], undefined)
+        assert.notEqual(result[path.PATH_KEY + "_" + 1], undefined)
+        assert.notEqual(result[path.PATH_KEY + "_" + 2], undefined)
     })
 
     test("joinPath", () => {
@@ -40,14 +54,14 @@ describe("Path tests", () => {
 
         // test long name
 
-        properties = path.splitPath(pathKey, longFileName)
+        properties = path.splitPath(pathKey, longFileNameEn)
         result = path.joinPath(pathKey, properties)
 
-        assert.strictEqual(result, longFileName)
+        assert.strictEqual(result, longFileNameEn)
     })
 
     test("restorePath", () => {
-        var properties = path.splitPath(pathKey, longFileName)
+        var properties = path.splitPath(pathKey, longFileNameEn)
         const metadata: FileMetadata = {
             properties: properties,
             id: "",
@@ -60,7 +74,7 @@ describe("Path tests", () => {
         path.restorePath(metadata)
     
         assert.equal(Object.keys(metadata.properties).length, 1)
-        assert.strictEqual(metadata.properties.path, longFileName)
+        assert.strictEqual(metadata.properties.path, longFileNameEn)
     })
 
 })

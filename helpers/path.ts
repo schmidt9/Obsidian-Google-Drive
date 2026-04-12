@@ -23,15 +23,23 @@ export const splitPath = (pathKey: string, pathValue: string) => {
 
     const pathPartSuffixLength = PART_DIVIDER.length + PART_NUMBER_SUFFIX_LENGTH
 
-    const keyLength = pathKey.length
-    const maxValueLength = MAX_KEY_VALUE_LENGTH - pathPartSuffixLength - keyLength
+    // use byte length to properly split string with multi-byte characters
+    const keyByteLength = Buffer.byteLength(pathKey, "utf-8")
+    const valueByteLength = Buffer.byteLength(pathValue, "utf-8")
+    const valueLength = pathValue.length
+    // caclulate average bytes per symbol (taking into account that some characters can be multi-byte)
+    const bytesPerSymbol = Math.ceil(valueByteLength / valueLength)
+
+    // calculate max value length for symbols based on byte length
+    const maxValueLength = Math.round((MAX_KEY_VALUE_LENGTH - pathPartSuffixLength - keyByteLength) / bytesPerSymbol)
 
     if (maxValueLength <= 0) {
         // it can happen if key is very long
         return result
     }
 
-    const partsCount = Math.ceil(pathValue.length / maxValueLength)
+    console.log("value length in bytes: ", valueByteLength, maxValueLength, bytesPerSymbol)
+    const partsCount = Math.ceil(valueLength / maxValueLength)
     var offset = 0
 
     for (let i = 0; i < partsCount; i++) {
