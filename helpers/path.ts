@@ -40,7 +40,6 @@ export const splitPath = (pathKey: string, pathValue: string) => {
         return result
     }
 
-    console.log("value length in bytes: ", valueByteLength, maxValueLength, bytesPerSymbol)
     const partsCount = Math.ceil(valueLength / maxValueLength)
     var offset = 0
 
