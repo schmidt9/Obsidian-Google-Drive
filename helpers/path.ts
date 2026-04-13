@@ -23,9 +23,11 @@ export const splitPath = (pathKey: string, pathValue: string) => {
 
     const pathPartSuffixLength = PART_DIVIDER.length + PART_NUMBER_SUFFIX_LENGTH
 
+    const encoder = new TextEncoder()
+
     // use byte length to properly split string with multi-byte characters
-    const keyByteLength = Buffer.byteLength(pathKey, "utf-8")
-    const valueByteLength = Buffer.byteLength(pathValue, "utf-8")
+    const keyByteLength = encoder.encode(pathKey).length
+    const valueByteLength = encoder.encode(pathValue).length
     const valueLength = pathValue.length
     // caclulate average bytes per symbol (taking into account that some characters can be multi-byte)
     const bytesPerSymbol = Math.ceil(valueByteLength / valueLength)
