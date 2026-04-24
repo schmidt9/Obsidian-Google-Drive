@@ -2,7 +2,7 @@ import ky from "ky";
 import ObsidianGoogleDrive from "main";
 import { getDriveKy } from "./ky";
 import { TAbstractFile, TFolder } from "obsidian";
-import { joinPath, restorePath } from "./path";
+import { restorePath } from "./path";
 
 export interface FileMetadata {
 	id: string;
