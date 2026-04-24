@@ -84,9 +84,13 @@ export const joinPath = (pathKey: string, properties: Record<string, string>) =>
 }
 
 export const restorePath = (metadata: FileMetadata) => {
-    if (metadata && metadata.properties) {
-        metadata.properties.path = joinPath(PATH_KEY, metadata.properties);
+    const hasPathKey = Object.prototype.hasOwnProperty.call(metadata.properties, PATH_KEY)
+    const hasPathParts = Object.keys(metadata.properties).some((key) => {
+        return key.startsWith(PATH_KEY + PART_DIVIDER)
+    })
 
+    if (hasPathKey || hasPathParts) {
+        metadata.properties.path = joinPath(PATH_KEY, metadata.properties);
         // remove path parts since they are already joined in metadata.properties.path
         Object.keys(metadata.properties).forEach((key) => {
             if (key.startsWith(PATH_KEY + PART_DIVIDER)) {
