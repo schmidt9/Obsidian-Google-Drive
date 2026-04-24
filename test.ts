@@ -10,7 +10,7 @@ describe("Path tests", () => {
     const longFileNameEn = "test note with a long long long long long long long long long long long long long long long long long long name longer than 124 bytes.md"
     // 241 bytes in UTF-8 encoding
     const longFileNameRu = "тестовая заметка c длинным длинным длинным длинным длинным длинным длинным длинным длинным длинным именем, которое больше 124 байт.md"
-    // 223 bytes in UTF-8 encoding
+    // 188 bytes in UTF-8 encoding
     const longFileNameMixed = "test note with a long long name, тестовая заметка c длинным длинным именем, 😀😀😀😀😀 世界 世界 これは非常に長いテキストです"
     const pathKey = path.PATH_KEY
 
