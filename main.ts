@@ -144,8 +144,8 @@ export default class ObsidianGoogleDrive extends Plugin {
 	async saveSettings() {
 		this.writeQueue = this.writeQueue.then(async () => {
 			try {
-				const dataStr = JSON.stringify(this.settings);
-				const pluginDataDir = `${this.manifest.id}`;
+				const dataStr = JSON.stringify(this.settings, null, 2);
+				const pluginDataDir = `${this.manifest.dir}`;
 				const dataPath = `${pluginDataDir}/data.json`;
 
 				// Write directly to data.json via adapter
