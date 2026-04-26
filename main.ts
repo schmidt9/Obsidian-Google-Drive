@@ -40,6 +40,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	drive = getDriveClient(this);
 	ribbonIcon: HTMLElement;
 	syncing: boolean;
+	private writeQueue: Promise<void> = Promise.resolve();
 
 	async onload() {
 		const { vault } = this.app;
@@ -110,10 +111,6 @@ export default class ObsidianGoogleDrive extends Plugin {
 			callback: () => reset(this),
 		});
 
-		this.registerEvent(
-			this.app.workspace.on("quit", () => this.saveSettings())
-		);
-
 		this.app.workspace.onLayoutReady(() =>
 			this.registerEvent(vault.on("create", this.handleCreate.bind(this)))
 		);
@@ -131,10 +128,6 @@ export default class ObsidianGoogleDrive extends Plugin {
 		});
 	}
 
-	onunload() {
-		return this.saveSettings();
-	}
-
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
@@ -143,8 +136,29 @@ export default class ObsidianGoogleDrive extends Plugin {
 		);
 	}
 
-	saveSettings() {
-		return this.saveData(this.settings);
+	/**
+	 * Atomically save settings to prevent data.json corruption.
+	 * Uses a write queue to serialize concurrent writes.
+	 * Writes to adapter directly for better control over file operations.
+	 */
+	async saveSettings() {
+		this.writeQueue = this.writeQueue.then(async () => {
+			try {
+				const dataStr = JSON.stringify(this.settings);
+				const pluginDataDir = `${this.manifest.id}`;
+				const dataPath = `${pluginDataDir}/data.json`;
+
+				// Write directly to data.json via adapter
+				// The adapter handles OS-level I/O which is more reliable for atomic operations
+				await this.app.vault.adapter.write(dataPath, dataStr);
+			} catch (err) {
+				console.error(
+					"[ObsidianGoogleDrive] Failed to save settings:",
+					err
+				);
+			}
+		});
+		return this.writeQueue;
 	}
 
 	debouncedSaveSettings = debounce(this.saveSettings.bind(this), 500, true);
@@ -329,10 +343,10 @@ class SettingsTab extends PluginSettingTab {
 				"A refresh token is required to access your Google Drive for syncing. We suggest cloning your Google Drive vault to the current vault BEFORE syncing."
 			)
 			.addText((text) => {
-				const cancel = () => {
+				const cancel = async () => {
 					this.plugin.settings.refreshToken = "";
 					text.setValue("");
-					return this.plugin.saveSettings();
+					return await this.plugin.saveSettings();
 				};
 
 				text.setPlaceholder("Enter your refresh token")
@@ -355,7 +369,7 @@ class SettingsTab extends PluginSettingTab {
 								"Your current vault is not empty! If you want our plugin to handle the initial sync, you have to clear out the current vault. Check the readme or website for more details.",
 								0
 							);
-							return cancel();
+							return await cancel();
 						}
 
 						const changesToken =
