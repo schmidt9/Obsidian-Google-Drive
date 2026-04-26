@@ -130,6 +130,10 @@ export const joinPath = (pathKey: string, properties: Record<string, string>) =>
 }
 
 export const restorePath = (metadata: FileMetadata) => {
+    if (!metadata || !metadata.properties) {
+        return
+    }
+
     const hasPathKey = Object.prototype.hasOwnProperty.call(metadata.properties, PATH_KEY)
     const hasPathParts = Object.keys(metadata.properties).some((key) => {
         return key.startsWith(PATH_KEY + PART_DIVIDER)
