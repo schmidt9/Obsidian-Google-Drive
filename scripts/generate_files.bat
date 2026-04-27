@@ -1,6 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+@rem This script generates many test files which can be added to vault to test data.json corruption cases, 
+@rem when data.json gets too big and could be not fully written.
+
 @rem Backup data.json
 
 cd /d "%~dp0"
