@@ -10,6 +10,7 @@ import {
 import { pull } from "./pull";
 import { PATH_KEY, splitPath } from "./path"
 import { showNotice, setMessage } from "./notice";
+import { log } from "./logger";
 
 class ConfirmPushModal extends Modal {
 	proceed: (res: boolean) => void;
@@ -242,6 +243,9 @@ class ConfirmUndoModal extends Modal {
 
 export const push = async (t: ObsidianGoogleDrive) => {
 	if (t.syncing) return;
+
+	log(push.name);
+
 	const initialOperations = Object.entries(t.settings.operations).sort(
 		([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)
 	); // Alphabetical
@@ -379,6 +383,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 		await batchAsyncs(
 			files.map((file) => async () => {
+				log(`${push.name}: update ${file.path}`);
 				const id = await t.drive.updateFile(
 					pathToId[file.path],
 					new Blob([await vault.readBinary(file)]),
@@ -436,6 +441,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 	await batchAsyncs(
 		configFilesToSync.map((path) => async () => {
 			if (pathsToIds[path]) {
+				log(`${push.name}: update ${path}`);
 				await t.drive.updateFile(
 					pathsToIds[path],
 					new Blob([await adapter.readBinary(path)]),
@@ -461,6 +467,8 @@ export const push = async (t: ObsidianGoogleDrive) => {
 			pathsToIds[path] = id;
 		})
 	);
+
+	log(`${push.name}: update data.json`);
 
 	await t.drive.updateFile(
 		pathsToIds[vault.configDir + "/plugins/google-drive-sync/data.json"],
