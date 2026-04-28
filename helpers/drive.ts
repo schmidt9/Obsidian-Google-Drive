@@ -2,6 +2,7 @@ import ky from "ky";
 import ObsidianGoogleDrive from "main";
 import { getDriveKy } from "./ky";
 import { TAbstractFile, TFolder } from "obsidian";
+import { restorePath } from "./path";
 
 export interface FileMetadata {
 	id: string;
@@ -132,10 +133,17 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 			)
 			.json<any>();
 		if (!files) return;
-		return files as {
+		
+		const result = files as {
 			nextPageToken?: string;
 			files: FileMetadata[];
 		};
+
+		result.files.forEach((file) => {
+			restorePath(file);
+		});
+
+		return result;
 	};
 
 	const searchFiles = async (
@@ -411,13 +419,19 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 			result.nextPageToken = nextPage.nextPageToken;
 		}
 
-		return result.changes as {
+		const changes = result.changes as {
 			kind: string;
 			removed: boolean;
 			file: FileMetadata;
 			fileId: string;
 			time: string;
 		}[];
+
+		changes.forEach((change) => {
+			restorePath(change.file); // TODO: check if we need this here since file seems to have no properties field here
+		});
+
+		return changes;
 	};
 
 	const deleteFilesMinimumOperations = async (files: TAbstractFile[]) => {
