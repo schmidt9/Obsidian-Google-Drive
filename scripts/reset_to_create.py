@@ -13,38 +13,39 @@ for testing purposes or on sync failures, so you do not need to readd or verify 
 import json
 import shutil
 import os
+from pathlib import Path
 
-def backup_file(filename):
+def backup_file(filepath):
     """Create numbered backup of the file"""
-    base_name = filename
     counter = 1
     
     while True:
-        backup_name = f"{base_name}.back{counter}"
-        if not os.path.exists(backup_name):
-            shutil.copy2(filename, backup_name)
-            print(f"Backup created: {backup_name}")
-            return backup_name
+        backup_path = f"{filepath}.back{counter}"
+        if not os.path.exists(backup_path):
+            shutil.copy2(filepath, backup_path)
+            print(f"Backup created: {backup_path}")
+            return backup_path
         counter += 1
 
 def process_data_json():
     """Main function to process data.json file"""
     
     # File name
-    filename = "data.json"
+    script_path = Path(__file__).parent.resolve()
+    filepath = (script_path / "../data.json").resolve()
     
     # Check if file exists
-    if not os.path.exists(filename):
-        print(f"Error: {filename} not found!")
+    if not os.path.exists(filepath):
+        print(f"Error: {filepath} not found!")
         return
     
     # Step 1: Create backup
     print("Step 1: Creating backup...")
-    backup_file(filename)
+    backup_file(filepath)
     
     # Step 2: Read original data.json
-    print(f"\nStep 2: Reading {filename}...")
-    with open(filename, 'r') as file:
+    print(f"\nStep 2: Reading {filepath}...")
+    with open(filepath, 'r') as file:
         data = json.load(file)
     
     # Step 3: Extract driveIdToPath object
@@ -73,8 +74,8 @@ def process_data_json():
     data["lastSyncedAt"] = 0
     
     # Write updated data back to original file
-    print(f"\nStep 5: Writing updated data to {filename}...")
-    with open(filename, 'w') as file:
+    print(f"\nStep 5: Writing updated data to {filepath}...")
+    with open(filepath, 'w') as file:
         json.dump(data, file, indent=2)
     
     print("\n" + "="*50)
