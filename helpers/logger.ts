@@ -21,10 +21,26 @@ export class ConsoleLogger implements Logger {
             console.log(message, ...args);
         }
     }
+
+    logError(message: string, ...args: any[]): void {
+        if (this.loggingEnabled) {
+            console.error(message, ...args);
+        }
+    }
 }
 
 export const log = (message: string, ...args: any[]) => {
+    message = formatMessage(message);
+    ConsoleLogger.instance?.log(message, ...args);
+}
+
+export const logError = (message: string, ...args: any[]) => {
+    message = formatMessage(message);
+    ConsoleLogger.instance?.logError(message, ...args);
+}
+
+const formatMessage = (message: string) => {
     const timestamp = new Date().toLocaleString();
     message = `[${timestamp}] ${message}`;
-    ConsoleLogger.instance?.log(message, ...args);
+    return message;
 }

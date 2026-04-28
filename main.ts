@@ -4,7 +4,7 @@ import { pull } from "helpers/pull";
 import { push } from "helpers/push";
 import { reset } from "helpers/reset";
 import { showNotice } from "helpers/notice";
-import { ConsoleLogger, log } from "helpers/logger";
+import { ConsoleLogger, log, logError } from "helpers/logger";
 import {
 	App,
 	debounce,
@@ -157,10 +157,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 				// The adapter handles OS-level I/O which is more reliable for atomic operations
 				await this.app.vault.adapter.write(dataPath, dataStr);
 			} catch (err) {
-				console.error(
-					"[ObsidianGoogleDrive] Failed to save settings:",
-					err
-				);
+				logError("Failed to save settings:", err);
 			}
 		});
 		return this.writeQueue;
