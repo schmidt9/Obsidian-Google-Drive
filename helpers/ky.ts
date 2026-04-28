@@ -1,7 +1,7 @@
 import ky, { Hooks } from "ky";
 import ObsidianGoogleDrive from "main";
-import { Notice } from "obsidian";
 import { checkConnection } from "./drive";
+import { showNotice } from "./notice";
 
 const getHooks = (t: ObsidianGoogleDrive): Hooks => ({
 	beforeRequest: [
@@ -21,7 +21,7 @@ const getHooks = (t: ObsidianGoogleDrive): Hooks => ({
 	afterResponse: [
 		async (request, options, response) => {
 			if (!response.ok) {
-				new Notice(`Error: ${await response.text()}`);
+				showNotice(`Error: ${await response.text()}`);
 				return new Response();
 			}
 			return response;
@@ -52,9 +52,8 @@ export const refreshAccessToken = async (t: ObsidianGoogleDrive) => {
 		return t.accessToken;
 	} catch (e: any) {
 		if (!(await checkConnection())) {
-			return new Notice(
-				"Something is wrong with your internet connection, so we could not fetch a new access token! Once you're back online, please restart Obsidian.",
-				0
+			return showNotice(
+				"Something is wrong with your internet connection, so we could not fetch a new access token! Once you're back online, please restart Obsidian."
 			);
 		}
 		t.settings.refreshToken = "";
@@ -63,9 +62,8 @@ export const refreshAccessToken = async (t: ObsidianGoogleDrive) => {
 			expiresAt: 0,
 		};
 
-		new Notice(
-			"Something is wrong with your refresh token, please restart Obsidian and then reset it.",
-			0
+		showNotice(
+			"Something is wrong with your refresh token, please restart Obsidian and then reset it."
 		);
 		await t.saveSettings();
 		return;

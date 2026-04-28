@@ -6,7 +6,7 @@ export class ConsoleLogger implements Logger {
 
     private loggingEnabled: boolean;
 
-    static instance: ConsoleLogger | null = null;
+    static instance: ConsoleLogger | undefined;
 
     public static init(loggingEnabled: boolean) {
         ConsoleLogger.instance = new ConsoleLogger(loggingEnabled);
@@ -24,7 +24,5 @@ export class ConsoleLogger implements Logger {
 }
 
 export const log = (message: string, ...args: any[]) => {
-    if (ConsoleLogger.instance) {
-        ConsoleLogger.instance.log(message, ...args);
-    }
+    ConsoleLogger.instance?.log(message, ...args);
 }

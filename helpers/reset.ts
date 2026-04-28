@@ -6,14 +6,13 @@ import {
 	getSyncMessage,
 } from "./drive";
 import {
-	Notice,
 	TAbstractFile,
 	TFile,
-	TFolder,
 	Modal,
 	Setting,
 } from "obsidian";
 import { pull } from "./pull";
+import { setMessage, showNotice } from "./notice";
 
 export class ConfirmResetModal extends Modal {
 	proceed: (res: boolean) => void;
@@ -79,7 +78,7 @@ export const reset = async (t: ObsidianGoogleDrive) => {
 		);
 	}
 
-	syncNotice.setMessage("Syncing (33%)");
+	setMessage(syncNotice, "Syncing (33%)");
 
 	if (modifies.length) {
 		let completed = 0;
@@ -93,15 +92,13 @@ export const reset = async (t: ObsidianGoogleDrive) => {
 					t.drive.getFileMetadata(filePathToId[file.path]),
 				]);
 				if (!onlineFile || !metadata) {
-					return new Notice(
+					return showNotice(
 						"An error occurred fetching Google Drive files."
 					);
 				}
 
 				completed++;
-				syncNotice.setMessage(
-					getSyncMessage(33, 66, completed, files.length)
-				);
+				setMessage(syncNotice, getSyncMessage(33, 66, completed, files.length));
 				return t.modifyFile(file, onlineFile, metadata.modifiedTime);
 			})
 		);
@@ -113,7 +110,7 @@ export const reset = async (t: ObsidianGoogleDrive) => {
 			matches: deletes.map(([path]) => ({ properties: { path } })),
 		});
 		if (!files) {
-			return new Notice("An error occurred fetching Google Drive files.");
+			return showNotice("An error occurred fetching Google Drive files.");
 		}
 
 		const pathToFile = Object.fromEntries(
@@ -148,14 +145,12 @@ export const reset = async (t: ObsidianGoogleDrive) => {
 					.getFile(filePathToId[path])
 					.arrayBuffer();
 				if (!onlineFile) {
-					return new Notice(
+					return showNotice(
 						"An error occurred fetching Google Drive files."
 					);
 				}
 				completed++;
-				syncNotice.setMessage(
-					getSyncMessage(66, 99, completed, deletedFiles.length)
-				);
+				setMessage(syncNotice, getSyncMessage(66, 99, completed, deletedFiles.length));
 				return t.createFile(
 					path,
 					onlineFile,
@@ -169,5 +164,5 @@ export const reset = async (t: ObsidianGoogleDrive) => {
 
 	await t.endSync(syncNotice);
 
-	new Notice("Reset complete.");
+	showNotice("Reset complete.");
 };

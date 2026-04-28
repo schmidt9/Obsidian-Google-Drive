@@ -1,5 +1,5 @@
 import ObsidianGoogleDrive from "main";
-import { Modal, Notice, setIcon, Setting, TFile, TFolder } from "obsidian";
+import { Modal, setIcon, Setting, TFile, TFolder } from "obsidian";
 import {
 	batchAsyncs,
 	fileNameFromPath,
@@ -9,6 +9,7 @@ import {
 } from "./drive";
 import { pull } from "./pull";
 import { PATH_KEY, splitPath } from "./path"
+import { showNotice, setMessage } from "./notice";
 
 class ConfirmPushModal extends Modal {
 	proceed: (res: boolean) => void;
@@ -176,7 +177,7 @@ class ConfirmUndoModal extends Modal {
 			matches: paths.map((path) => ({ properties: { path } })),
 		});
 		if (!files) {
-			return new Notice("An error occurred fetching Google Drive files.");
+			return showNotice("An error occurred fetching Google Drive files.");
 		}
 
 		const pathToFile = Object.fromEntries(
@@ -207,9 +208,7 @@ class ConfirmUndoModal extends Modal {
 					.getFile(this.filePathToId[path])
 					.arrayBuffer();
 				if (!onlineFile) {
-					return new Notice(
-						"An error occurred fetching Google Drive files."
-					);
+					return showNotice("An error occurred fetching Google Drive files.");
 				}
 				return this.t.createFile(
 					path,
@@ -235,7 +234,7 @@ class ConfirmUndoModal extends Modal {
 			this.t.drive.getFileMetadata(this.filePathToId[path]),
 		]);
 		if (!onlineFile || !metadata) {
-			return new Notice("An error occurred fetching Google Drive files.");
+			return showNotice("An error occurred fetching Google Drive files.");
 		}
 		return this.t.modifyFile(file, onlineFile, metadata.modifiedTime);
 	}
@@ -275,7 +274,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 		matches: [{ properties: { config: "true" } }],
 	});
 	if (!configOnDrive) {
-		return new Notice("An error occurred fetching Google Drive files.");
+		return showNotice("An error occurred fetching Google Drive files.");
 	}
 
 	await Promise.all(
@@ -291,7 +290,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 			deletes.map(([path]) => pathsToIds[path])
 		);
 		if (!deleteRequest) {
-			return new Notice("An error occurred deleting Google Drive files.");
+			return showNotice("An error occurred deleting Google Drive files.");
 		}
 		deletes.forEach(([path]) => {
 			const fileId = pathsToIds[path];
@@ -299,7 +298,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 		});
 	}
 
-	syncNotice.setMessage("Syncing (33%)");
+	setMessage(syncNotice, "Syncing (33%)");
 
 	if (creates.length) {
 		let completed = 0;
@@ -326,15 +325,11 @@ export const push = async (t: ObsidianGoogleDrive) => {
 							modifiedTime: new Date().toISOString(),
 						});
 						if (!id) {
-							return new Notice(
-								"An error occurred creating Google Drive folders."
-							);
+							return showNotice("An error occurred creating Google Drive folders.");
 						}
 
 						completed++;
-						syncNotice.setMessage(
-							getSyncMessage(33, 66, completed, files.length)
-						);
+						setMessage(syncNotice, getSyncMessage(33, 66, completed, files.length));
 
 						t.settings.driveIdToPath[id] = folder.path;
 						pathsToIds[folder.path] = id;
@@ -357,15 +352,11 @@ export const push = async (t: ObsidianGoogleDrive) => {
 					}
 				);
 				if (!id) {
-					return new Notice(
-						"An error occurred creating Google Drive files."
-					);
+					return showNotice("An error occurred creating Google Drive files.");
 				}
 
 				completed++;
-				syncNotice.setMessage(
-					getSyncMessage(33, 66, completed, files.length)
-				);
+				setMessage(syncNotice, getSyncMessage(33, 66, completed, files.length));
 
 				t.settings.driveIdToPath[id] = note.path;
 			})
@@ -394,15 +385,11 @@ export const push = async (t: ObsidianGoogleDrive) => {
 					{ modifiedTime: new Date().toISOString() }
 				);
 				if (!id) {
-					return new Notice(
-						"An error occurred modifying Google Drive files."
-					);
+					return showNotice("An error occurred modifying Google Drive files.");
 				}
 
 				completed++;
-				syncNotice.setMessage(
-					getSyncMessage(66, 99, completed, files.length)
-				);
+				setMessage(syncNotice, getSyncMessage(66, 99, completed, files.length));
 			})
 		);
 	}
@@ -436,9 +423,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 						modifiedTime: new Date().toISOString(),
 					});
 					if (!id) {
-						return new Notice(
-							"An error occurred creating Google Drive folders."
-						);
+						return showNotice("An error occurred creating Google Drive folders.");
 					}
 
 					t.settings.driveIdToPath[id] = folder;
@@ -469,9 +454,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 				}
 			);
 			if (!id) {
-				return new Notice(
-					"An error occurred creating Google Drive config files."
-				);
+				return showNotice("An error occurred creating Google Drive config files.");
 			}
 
 			t.settings.driveIdToPath[id] = path;
@@ -489,5 +472,5 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 	await t.endSync(syncNotice, false);
 
-	new Notice("Sync complete!");
+	showNotice("Sync complete!");
 };
