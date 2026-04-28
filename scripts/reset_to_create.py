@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 
 """
 This script moves all files from "driveIdToPath" (except .obsidian entries, which will be deleted)
@@ -45,7 +45,7 @@ def process_data_json():
     
     # Step 2: Read original data.json
     print(f"\nStep 2: Reading {filepath}...")
-    with open(filepath, 'r') as file:
+    with open(filepath, 'r', encoding='utf-8') as file:
         data = json.load(file)
     
     # Step 3: Extract driveIdToPath object
@@ -75,8 +75,8 @@ def process_data_json():
     
     # Write updated data back to original file
     print(f"\nStep 5: Writing updated data to {filepath}...")
-    with open(filepath, 'w') as file:
-        json.dump(data, file, indent=2)
+    with open(filepath, 'w', encoding='utf-8') as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
     
     print("\n" + "="*50)
     print("Summary:")
