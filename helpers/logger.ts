@@ -24,5 +24,7 @@ export class ConsoleLogger implements Logger {
 }
 
 export const log = (message: string, ...args: any[]) => {
+    const timestamp = new Date().toLocaleString();
+    message = `[${timestamp}] ${message}`;
     ConsoleLogger.instance?.log(message, ...args);
 }
