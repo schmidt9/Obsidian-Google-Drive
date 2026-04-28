@@ -9,11 +9,14 @@ import {
 } from "./drive";
 import { refreshAccessToken } from "./ky";
 import { showNotice, setMessage } from "./notice";
+import { log } from "./logger";
 
 export const pull = async (
 	t: ObsidianGoogleDrive,
 	silenceNotices?: boolean
 ) => {
+	log(pull.name);
+
 	let syncNotice: any = null;
 
 	if (!silenceNotices) {

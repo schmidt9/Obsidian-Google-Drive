@@ -2,6 +2,7 @@ import ky, { Hooks } from "ky";
 import ObsidianGoogleDrive from "main";
 import { checkConnection } from "./drive";
 import { showNotice } from "./notice";
+import { log } from "./logger";
 
 const getHooks = (t: ObsidianGoogleDrive): Hooks => ({
 	beforeRequest: [
@@ -39,6 +40,8 @@ export const getDriveKy = (t: ObsidianGoogleDrive) => {
 
 export const refreshAccessToken = async (t: ObsidianGoogleDrive) => {
 	try {
+		log(refreshAccessToken.name);
+
 		const { expires_in, access_token } = await ky
 			.post("https://ogd.richardxiong.com/api/access", {
 				json: { refresh_token: t.settings.refreshToken },

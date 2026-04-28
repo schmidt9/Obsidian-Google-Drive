@@ -4,7 +4,7 @@ import { pull } from "helpers/pull";
 import { push } from "helpers/push";
 import { reset } from "helpers/reset";
 import { showNotice } from "helpers/notice";
-import { ConsoleLogger } from "helpers/logger";
+import { ConsoleLogger, log } from "helpers/logger";
 import {
 	App,
 	debounce,
@@ -280,6 +280,8 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	async startSync() {
+		log(this.startSync.name);
+
 		if (!(await checkConnection())) {
 			throw showNotice(
 				"You are not connected to the internet, so you cannot sync right now. Please try syncing once you have connection again."
@@ -291,6 +293,8 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	async endSync(syncNotice?: Notice, retainConfigChanges = true) {
+		log(this.endSync.name);
+
 		if (retainConfigChanges) {
 			const configFilesToSync = await this.drive.getConfigFilesToSync();
 
