@@ -4,7 +4,7 @@ import { pull } from "helpers/pull";
 import { push } from "helpers/push";
 import { reset } from "helpers/reset";
 import { showNotice } from "helpers/notice";
-import { ConsoleLogger, log, logError } from "helpers/logger";
+import { ConsoleLogger, log, logError, LogSettings } from "helpers/logger";
 import {
 	App,
 	debounce,
@@ -23,7 +23,7 @@ interface PluginSettings {
 	driveIdToPath: Record<string, string>;
 	lastSyncedAt: number;
 	changesToken: string;
-	loggingEnabled: boolean;
+	logSettings: LogSettings;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -32,7 +32,11 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	driveIdToPath: {},
 	lastSyncedAt: 0,
 	changesToken: "",
-	loggingEnabled: false,
+	logSettings: {
+		enabled: false,
+		addTimestamps: false,
+		addPluginName: false,
+	},
 };
 
 export default class ObsidianGoogleDrive extends Plugin {
@@ -53,7 +57,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		ConsoleLogger.init(this.settings.loggingEnabled);
+		ConsoleLogger.init(this.settings.logSettings);
 
 		if (!this.settings.refreshToken) {
 			showNotice(
