@@ -383,7 +383,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 		await batchAsyncs(
 			files.map((file) => async () => {
-				log(`${push.name}: update ${file.path}`);
+				log(`${push.name}: update ${file.path} (completed ${completed} of ${files.length})`);
 				const id = await t.drive.updateFile(
 					pathToId[file.path],
 					new Blob([await vault.readBinary(file)]),
