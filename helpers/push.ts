@@ -485,8 +485,7 @@ export const push = async (t: ObsidianGoogleDrive) => {
 	} catch (e) {
 		setMessage(
 			syncNotice,
-			"An error occurred during push operation:\n" + 
-			(e instanceof Error ? e.message : String(e))
+			`An error occurred during push operation:\n${e}`
 		);
 
 		t.stopSync(syncNotice, false);
