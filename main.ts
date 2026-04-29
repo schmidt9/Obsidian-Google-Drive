@@ -3,6 +3,8 @@ import { refreshAccessToken } from "helpers/ky";
 import { pull } from "helpers/pull";
 import { push } from "helpers/push";
 import { reset } from "helpers/reset";
+import { showNotice } from "helpers/notice";
+import { ConsoleLogger, log, logError, LogSettings } from "helpers/logger";
 import {
 	App,
 	debounce,
@@ -21,6 +23,7 @@ interface PluginSettings {
 	driveIdToPath: Record<string, string>;
 	lastSyncedAt: number;
 	changesToken: string;
+	logSettings: LogSettings;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -29,6 +32,11 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	driveIdToPath: {},
 	lastSyncedAt: 0,
 	changesToken: "",
+	logSettings: {
+		enabled: false,
+		addTimestamps: false,
+		addPluginName: false,
+	},
 };
 
 export default class ObsidianGoogleDrive extends Plugin {
@@ -49,10 +57,11 @@ export default class ObsidianGoogleDrive extends Plugin {
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
+		ConsoleLogger.init(this.settings.logSettings);
+
 		if (!this.settings.refreshToken) {
-			new Notice(
-				"Please add your refresh token to Google Drive Sync through our website or our readme/this plugin's settings. If you haven't already, PLEASE read through this plugin's readme or website CAREFULLY for instructions on how to use this plugin. If you don't know what you're doing, your data could get DELETED.",
-				0
+			showNotice(
+				"Please add your refresh token to Google Drive Sync through our website or our readme/this plugin's settings. If you haven't already, PLEASE read through this plugin's readme or website CAREFULLY for instructions on how to use this plugin. If you don't know what you're doing, your data could get DELETED."
 			);
 			return;
 		}
@@ -152,10 +161,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 				// The adapter handles OS-level I/O which is more reliable for atomic operations
 				await this.app.vault.adapter.write(dataPath, dataStr);
 			} catch (err) {
-				console.error(
-					"[ObsidianGoogleDrive] Failed to save settings:",
-					err
-				);
+				logError("Failed to save settings:", err);
 			}
 		});
 		return this.writeQueue;
@@ -275,17 +281,21 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	async startSync() {
+		log(this.startSync.name);
+
 		if (!(await checkConnection())) {
-			throw new Notice(
+			throw showNotice(
 				"You are not connected to the internet, so you cannot sync right now. Please try syncing once you have connection again."
 			);
 		}
 		this.ribbonIcon.addClass("spin");
 		this.syncing = true;
-		return new Notice("Syncing (0%)", 0);
+		return showNotice("Syncing (0%)");
 	}
 
 	async endSync(syncNotice?: Notice, retainConfigChanges = true) {
+		log(this.endSync.name);
+
 		if (retainConfigChanges) {
 			const configFilesToSync = await this.drive.getConfigFilesToSync();
 
@@ -306,7 +316,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 
 		const changesToken = await this.drive.getChangesStartToken();
 		if (!changesToken) {
-			return new Notice(
+			return showNotice(
 				"An error occurred fetching Google Drive changes token."
 			);
 		}
@@ -365,7 +375,7 @@ class SettingsTab extends PluginSettingTab {
 								.getAllLoadedFiles()
 								.filter(({ path }) => path !== "/").length > 0
 						) {
-							new Notice(
+							showNotice(
 								"Your current vault is not empty! If you want our plugin to handle the initial sync, you have to clear out the current vault. Check the readme or website for more details.",
 								0
 							);
@@ -375,16 +385,15 @@ class SettingsTab extends PluginSettingTab {
 						const changesToken =
 							await this.plugin.drive.getChangesStartToken();
 						if (!changesToken) {
-							return new Notice(
+							return showNotice(
 								"An error occurred fetching Google Drive changes token."
 							);
 						}
 						this.plugin.settings.changesToken = changesToken;
 
 						await this.plugin.saveSettings();
-						new Notice(
-							"Refresh token saved! Reload Obsidian to activate sync.",
-							0
+						showNotice (
+							"Refresh token saved! Reload Obsidian to activate sync."
 						);
 					});
 			});

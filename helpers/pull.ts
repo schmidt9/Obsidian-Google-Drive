@@ -1,5 +1,5 @@
 import ObsidianGoogleDrive from "main";
-import { Notice, TFile, TFolder } from "obsidian";
+import { TFile, TFolder } from "obsidian";
 import {
 	batchAsyncs,
 	FileMetadata,
@@ -8,11 +8,15 @@ import {
 	getSyncMessage,
 } from "./drive";
 import { refreshAccessToken } from "./ky";
+import { showNotice, setMessage } from "./notice";
+import { log } from "./logger";
 
 export const pull = async (
 	t: ObsidianGoogleDrive,
 	silenceNotices?: boolean
 ) => {
+	log(pull.name);
+
 	let syncNotice: any = null;
 
 	if (!silenceNotices) {
@@ -36,12 +40,12 @@ export const pull = async (
 		],
 	});
 	if (!recentlyModified) {
-		return new Notice("An error occurred fetching Google Drive files.");
+		return showNotice("An error occurred fetching Google Drive files.");
 	}
 
 	const changes = await t.drive.getChanges(t.settings.changesToken);
 	if (!changes) {
-		return new Notice("An error occurred fetching Google Drive changes.");
+		return showNotice("An error occurred fetching Google Drive changes.");
 	}
 
 	const deletions = changes
@@ -63,7 +67,7 @@ export const pull = async (
 	if (!recentlyModified.length && !deletions.length) {
 		if (silenceNotices) return;
 		t.endSync(syncNotice);
-		return new Notice("You're up to date!");
+		return showNotice("You're up to date!");
 	}
 
 	const pathToId = Object.fromEntries(
@@ -119,7 +123,7 @@ export const pull = async (
 
 	await deleteFiles();
 
-	syncNotice?.setMessage("Syncing (33%)");
+	setMessage(syncNotice, "Syncing (33%)");
 
 	const upsertFiles = async () => {
 		const newFolders = recentlyModified.filter(
@@ -173,9 +177,7 @@ export const pull = async (
 
 				const content = await t.drive.getFile(file.id).arrayBuffer();
 
-				syncNotice?.setMessage(
-					getSyncMessage(33, 100, completed, newNotes.length)
-				);
+				setMessage(syncNotice, getSyncMessage(33, 100, completed, newNotes.length));
 
 				if (localFile instanceof TFile) {
 					return t.modifyFile(localFile, content, file.modifiedTime);
@@ -283,5 +285,5 @@ export const pull = async (
 
 	await t.endSync(syncNotice);
 
-	new Notice("Files have been synced from Google Drive!");
+	showNotice("Files have been synced from Google Drive!");
 };

@@ -3,6 +3,7 @@ import ObsidianGoogleDrive from "main";
 import { getDriveKy } from "./ky";
 import { TAbstractFile, TFolder } from "obsidian";
 import { restorePath } from "./path";
+import { log } from "./logger";
 
 export interface FileMetadata {
 	id: string;
@@ -154,6 +155,8 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 		},
 		includeObsidian = false
 	) => {
+		log(searchFiles.name);
+
 		const files = await paginateFiles({ ...data, pageSize: 1000 });
 		if (!files) return;
 
@@ -222,6 +225,8 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 			if (!parent) return;
 		}
 
+		log(createFolder.name, name);
+
 		if (!properties) properties = {};
 		if (!properties.vault) properties.vault = t.app.vault.getName();
 
@@ -251,6 +256,8 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 			parent = await getRootFolderId();
 			if (!parent) return;
 		}
+
+		log(uploadFile.name, name);
 
 		if (!metadata) metadata = {};
 		if (!metadata.properties) metadata.properties = {};
@@ -290,10 +297,14 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 		newContent: Blob,
 		newMetadata: Partial<Omit<FileMetadata, "id">> = {}
 	) => {
+		const json = JSON.stringify(newMetadata)
+
+		log(updateFile.name, id, json);
+
 		const form = new FormData();
 		form.append(
 			"metadata",
-			new Blob([JSON.stringify(newMetadata)], {
+			new Blob([json], {
 				type: "application/json",
 			})
 		);
@@ -397,6 +408,8 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 
 	const getChanges = async (startToken: string) => {
 		if (!startToken) return [];
+
+		log(getChanges.name);
 
 		const request = (token: string) =>
 			drive
