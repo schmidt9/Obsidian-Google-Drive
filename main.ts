@@ -322,9 +322,19 @@ export default class ObsidianGoogleDrive extends Plugin {
 		}
 		this.settings.changesToken = changesToken;
 		await this.saveSettings();
+
+		this.stopSync(syncNotice);
+	}
+	
+	stopSync(syncNotice?: Notice, hideNotice: boolean = true) {
+		log(this.stopSync.name);
+
 		this.ribbonIcon.removeClass("spin");
 		this.syncing = false;
-		syncNotice?.hide();
+
+		if (hideNotice) {
+			syncNotice?.hide();
+		}
 	}
 }
 
