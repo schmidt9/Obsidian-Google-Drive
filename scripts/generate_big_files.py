@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to generate 15 blob files of 200MB each.
+Script to generate 15 blob files of different size to test batch files upload.
 Creates files named blob_01.dat through blob_15.dat
 """
 
@@ -9,7 +9,7 @@ import sys
 import time
 from pathlib import Path
 
-def generate_blob_file(filename, target_size_mb=200, chunk_size_mb=10):
+def generate_blob_file(filename, target_size_mb, chunk_size_mb = 1):
     """
     Generate a blob file of specified size.
     
@@ -62,9 +62,6 @@ def generate_blob_file(filename, target_size_mb=200, chunk_size_mb=10):
 def main():
     """Main function to generate all blob files."""
     
-    # Configuration
-    num_files = 15
-    file_size_mb = 200
     output_dir = "./blob_files"
     
     # Create output directory if it doesn't exist
@@ -75,55 +72,31 @@ def main():
         print(f"Error creating directory {output_dir}: {e}")
         sys.exit(1)
     
-    # Check available disk space
-    try:
-        total_size_needed = num_files * file_size_mb
-        stat = os.statvfs(output_dir)
-        available_space_mb = (stat.f_bavail * stat.f_frsize) / (1024 * 1024)
-        
-        print(f"Total space needed: {total_size_needed:.2f}MB")
-        print(f"Available space: {available_space_mb:.2f}MB")
-        
-        if available_space_mb < total_size_needed:
-            print(f"⚠ Warning: Not enough disk space! Need {total_size_needed:.2f}MB but only have {available_space_mb:.2f}MB")
-            response = input("Continue anyway? (y/N): ")
-            if response.lower() != 'y':
-                print("Operation cancelled.")
-                sys.exit(0)
-    except Exception as e:
-        print(f"Could not check disk space: {e}")
-    
-    # Generate all blob files
-    print(f"\nGenerating {num_files} blob files of {file_size_mb}MB each...")
-    print("-" * 60)
-    
     overall_start = time.time()
     successful = 0
-    
-    for i in range(1, num_files + 1):
-        filename = os.path.join(output_dir, f"blob_{i:02d}.dat")
-        if generate_blob_file(filename, file_size_mb):
-            successful += 1
+
+    # key = files count, value = file size in MB
+    files = {
+        3: 200,
+        5: 10,
+        15: 1
+    }
+
+    for count, file_size in files.items():
+        for _ in range(0, count):
+            index = successful + 1
+            filename = os.path.join(output_dir, f"blob_{index:02d}.dat")
+
+            if generate_blob_file(filename, file_size):
+                successful += 1
     
     # Summary
     overall_elapsed = time.time() - overall_start
     print("-" * 60)
     print(f"\n✅ Generation complete!")
-    print(f"   Successful: {successful}/{num_files} files")
+    print(f"   Successful: {successful} files")
     print(f"   Total time: {overall_elapsed:.2f} seconds")
     print(f"   Location: {os.path.abspath(output_dir)}")
-    
-    # Verify all files
-    print("\nVerifying created files:")
-    for i in range(1, num_files + 1):
-        filename = os.path.join(output_dir, f"blob_{i:02d}.dat")
-        if os.path.exists(filename):
-            size = os.path.getsize(filename)
-            size_mb = size / (1024 * 1024)
-            status = "✓" if abs(size_mb - file_size_mb) < 0.1 else "⚠"
-            print(f"  {status} {filename}: {size_mb:.2f}MB")
-        else:
-            print(f"  ✗ {filename}: Missing")
 
 if __name__ == "__main__":
     try:

@@ -244,6 +244,10 @@ class ConfirmUndoModal extends Modal {
 export const push = async (t: ObsidianGoogleDrive) => {
 	if (t.syncing) return;
 
+	// set batch size limits to avoid request timeout error for large files sent in batches
+	const MAX_BATCH_SIZE = 10;
+	const MAX_BATCH_BYTES = 50 * 1024 * 1024; // 50 MB per concurrent batch
+
 	log(push.name);
 
 	const initialOperations = Object.entries(t.settings.operations).sort(
@@ -344,11 +348,19 @@ export const push = async (t: ObsidianGoogleDrive) => {
 			}
 
 			const notes = files.filter((file) => file instanceof TFile) as TFile[];
+			const noteSizes = await Promise.all(
+				notes.map(async (note) => {
+					const stat = await adapter.stat(note.path);
+					return stat?.size || 0;
+				})
+			);
 
 			await batchAsyncs(
 				notes.map((note) => async () => {
+					const blob = new Blob([await vault.readBinary(note)]);
+
 					const id = await t.drive.uploadFile(
-						new Blob([await vault.readBinary(note)]),
+						blob,
 						note.name,
 						note.parent ? pathsToIds[note.parent.path] : undefined,
 						{
@@ -363,8 +375,12 @@ export const push = async (t: ObsidianGoogleDrive) => {
 					completed++;
 					setMessage(syncNotice, getSyncMessage(33, 66, completed, files.length));
 
+					log(`${push.name}: uploaded ${note.path} (completed ${completed} of ${notes.length})`);
+
 					t.settings.driveIdToPath[id] = note.path;
-				})
+				}),
+				MAX_BATCH_SIZE,
+				{ weights: noteSizes, maxBatchBytes: MAX_BATCH_BYTES }
 			);
 		}
 
@@ -375,6 +391,13 @@ export const push = async (t: ObsidianGoogleDrive) => {
 				.map(([path]) => vault.getFileByPath(path))
 				.filter((file) => file instanceof TFile) as TFile[];
 
+			const fileSizes = await Promise.all(
+				files.map(async (file) => {
+					const stat = await adapter.stat(file.path);
+					return stat?.size || 0;
+				})
+			);
+
 			const pathToId = Object.fromEntries(
 				Object.entries(t.settings.driveIdToPath).map(([id, path]) => [
 					path,
@@ -384,7 +407,6 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 			await batchAsyncs(
 				files.map((file) => async () => {
-					log(`${push.name}: update ${file.path} (completed ${completed} of ${files.length})`);
 					const id = await t.drive.updateFile(
 						pathToId[file.path],
 						new Blob([await vault.readBinary(file)]),
@@ -396,7 +418,11 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 					completed++;
 					setMessage(syncNotice, getSyncMessage(66, 99, completed, files.length));
-				})
+
+					log(`${push.name}: updated ${file.path} (completed ${completed} of ${files.length})`);
+				}),
+				MAX_BATCH_SIZE,
+				{ weights: fileSizes, maxBatchBytes: MAX_BATCH_BYTES }
 			);
 		}
 

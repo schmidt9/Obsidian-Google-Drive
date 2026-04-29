@@ -564,9 +564,51 @@ export const checkConnection = async () => {
 
 export const batchAsyncs = async (
 	requests: (() => Promise<any>)[],
-	batchSize = 10
+	batchSize = 10,
+	options?: {
+		weights?: number[];
+		maxBatchBytes?: number;
+	}
 ) => {
 	const results = [];
+	const weights = options?.weights;
+	const maxBatchBytes = options?.maxBatchBytes;
+
+	if (weights && maxBatchBytes) {
+		for (let i = 0; i < requests.length; ) {
+			let currentBatchSize = 0;
+			let batchBytes = 0;
+
+			while (
+				i + currentBatchSize < requests.length &&
+				currentBatchSize < batchSize &&
+				batchBytes + (weights[i + currentBatchSize] || 0) <= maxBatchBytes
+			) {
+				batchBytes += weights[i + currentBatchSize] || 0;
+				currentBatchSize++;
+			}
+
+			if (!currentBatchSize) {
+				currentBatchSize = 1;
+			}
+
+			if (currentBatchSize === 1) {
+				log(batchAsyncs.name, `Single request exceeds max batch (${maxBatchBytes} bytes): ${weights[i]} bytes`);
+			} else {	
+				log(batchAsyncs.name, `batch size: ${currentBatchSize}, batch bytes: ${batchBytes}`);
+			}
+
+			const batch = requests.slice(i, i + currentBatchSize);
+			results.push(
+				...(await Promise.all(batch.map((request) => request())))
+			);
+			i += currentBatchSize;
+		}
+		return results;
+	}
+
+	log(batchAsyncs.name, `batch size: ${batchSize}, no batch bytes limit`);
+
 	for (let i = 0; i < requests.length; i += batchSize) {
 		const batch = requests.slice(i, i + batchSize);
 		results.push(...(await Promise.all(batch.map((request) => request()))));
