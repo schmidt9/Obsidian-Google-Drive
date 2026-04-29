@@ -176,12 +176,14 @@ export const pull = async (
 						return;
 					}
 
+					log(`${pull.name}: downloading ${file.properties.path}`);
+
 					const content = await t.drive.getFile(file.id).arrayBuffer();
 
 					setMessage(syncNotice, getSyncMessage(33, 100, completed, newNotes.length));
 					log(`${pull.name}: downloaded ${file.properties.path}, 
-					size ${content.byteLength} bytes 
-					(completed ${completed} of ${newNotes.length})`
+						size ${content.byteLength} bytes 
+						(completed ${completed} of ${newNotes.length})`
 					);
 
 					if (localFile instanceof TFile) {
