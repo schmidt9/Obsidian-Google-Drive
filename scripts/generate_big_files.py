@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to generate 15 blob files of different size to test batch files upload.
+Script to generate blob files of different size to test batch files upload.
 Creates files named blob_01.dat through blob_15.dat
 """
 
@@ -15,8 +15,8 @@ def generate_blob_file(filename, target_size_mb, chunk_size_mb = 1):
     
     Args:
         filename: Output file name
-        target_size_mb: Target file size in MB (default: 200)
-        chunk_size_mb: Size of each write chunk in MB (default: 10)
+        target_size_mb: Target file size in MB
+        chunk_size_mb: Size of each write chunk in MB (default: 1)
     """
     target_bytes = target_size_mb * 1024 * 1024
     chunk_bytes = chunk_size_mb * 1024 * 1024
