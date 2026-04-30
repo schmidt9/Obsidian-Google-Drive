@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 
 """
 This script moves all files from "driveIdToPath" (except .obsidian entries, which will be deleted)
