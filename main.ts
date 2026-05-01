@@ -40,6 +40,11 @@ const DEFAULT_SETTINGS: PluginSettings = {
 };
 
 export default class ObsidianGoogleDrive extends Plugin {
+
+	// set batch size limits to avoid request timeout error for large files sent in batches
+	MAX_BATCH_SIZE = 10;
+	MAX_BATCH_BYTES = 50 * 1024 * 1024; // 50 MB per concurrent batch
+
 	settings: PluginSettings;
 	accessToken = {
 		token: "",

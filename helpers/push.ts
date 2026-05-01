@@ -244,10 +244,6 @@ class ConfirmUndoModal extends Modal {
 export const push = async (t: ObsidianGoogleDrive) => {
 	if (t.syncing) return;
 
-	// set batch size limits to avoid request timeout error for large files sent in batches
-	const MAX_BATCH_SIZE = 10;
-	const MAX_BATCH_BYTES = 50 * 1024 * 1024; // 50 MB per concurrent batch
-
 	log(push.name);
 
 	const initialOperations = Object.entries(t.settings.operations).sort(
@@ -379,8 +375,8 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 					t.settings.driveIdToPath[id] = note.path;
 				}),
-				MAX_BATCH_SIZE,
-				{ weights: noteSizes, maxBatchBytes: MAX_BATCH_BYTES }
+				t.MAX_BATCH_SIZE,
+				{ weights: noteSizes, maxBatchBytes: t.MAX_BATCH_BYTES }
 			);
 		}
 
@@ -421,8 +417,8 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 					log(`${push.name}: updated ${file.path} (completed ${completed} of ${files.length})`);
 				}),
-				MAX_BATCH_SIZE,
-				{ weights: fileSizes, maxBatchBytes: MAX_BATCH_BYTES }
+				t.MAX_BATCH_SIZE,
+				{ weights: fileSizes, maxBatchBytes: t.MAX_BATCH_BYTES }
 			);
 		}
 
