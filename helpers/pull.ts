@@ -164,8 +164,9 @@ export const pull = async (
 				})
 			);
 
-			log(`Starting files download:
-				${noteSizes.map((size, i) => `${newNotes[i].properties.path}: ${size} bytes`).join(",\n")}`
+			log(`Starting files download:\n${noteSizes.map(
+				(size, i) => `${newNotes[i].properties.path}: ${size} bytes`
+			).join(",\n")}`
 			);
 			
 			await batchAsyncs(

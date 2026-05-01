@@ -347,7 +347,7 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 
 	const getFileSize = async (id: string) => {
 		const result = await drive.get(`drive/v3/files/${id}?fields=size`).json<any>();
-		return result.size as number;
+		return Number(result.size);
 	};
 
 	const getFileMetadata = (id: string) =>
