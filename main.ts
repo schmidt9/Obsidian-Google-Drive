@@ -33,8 +33,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	lastSyncedAt: 0,
 	changesToken: "",
 	logSettings: {
-		enabled: false,
-		addTimestamps: false,
+		enabled: true,
+		addTimestamps: true,
 		addPluginName: false,
 	},
 };
