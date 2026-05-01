@@ -598,7 +598,7 @@ export const batchAsyncs = async (
 				currentBatchSize = 1;
 			}
 
-			if (currentBatchSize === 1) {
+			if (currentBatchSize === 1 && weights[i] > maxBatchBytes) {
 				log(batchAsyncs.name, `single file request (exceeds max batch ${maxBatchBytes} bytes): ${weights[i]} bytes`);
 			} else {	
 				log(batchAsyncs.name, `batch size: ${currentBatchSize}, batch bytes: ${batchBytes}`);
