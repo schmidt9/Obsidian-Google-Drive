@@ -51,6 +51,10 @@ export default class ObsidianGoogleDrive extends Plugin {
 	MAX_BATCH_SIZE = 10;
 	MAX_BATCH_BYTES = 50 * 1024 * 1024; // 50 MB per concurrent batch
 
+	LOGS_DIR_NAME = `logs`;
+	MAX_LOG_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB per log file
+	MAX_BACKUP_LOG_FILES = 3; // keep last 3 log files
+
 	settings: PluginSettings;
 	accessToken = {
 		token: "",
@@ -79,9 +83,9 @@ export default class ObsidianGoogleDrive extends Plugin {
 			enabled: this.settings.logSettings.logToFile,
 			addTimestamps: this.settings.logSettings.addTimestamps,
 			addPluginName: false, // plugin name is redundant in file logs since each plugin has its own log file
-			logDir: `${this.manifest.dir}/logs`,
-			maxBytes: 1 * 1024 * 1024, // 1 MB
-			maxBackups: 3, // keep last 3 log files
+			logDir: `${this.manifest.dir}/${this.LOGS_DIR_NAME}`,
+			maxBytes: this.MAX_LOG_FILE_SIZE_BYTES,
+			maxBackups: this.MAX_BACKUP_LOG_FILES,
 		});
 
 		if (!this.settings.refreshToken) {
@@ -434,5 +438,106 @@ class SettingsTab extends PluginSettingTab {
 						);
 					});
 			});
+
+		new Setting(containerEl)
+			.setName("Logging")
+			.setHeading()
+			.setDesc(
+				"Configure logging options. Logs can be helpful for debugging sync issues.",
+			);
+
+		new Setting(containerEl)
+			.setName("Log to console")
+			.setDesc(
+				"Log messages to the browser console. Useful for debugging.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.logSettings.logToConsole)
+					.onChange(async (value) => {
+						this.plugin.settings.logSettings.logToConsole = value;
+
+						if (ConsoleLogger.instance) {
+							ConsoleLogger.instance.options.enabled = value;
+						}
+
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		const logToFileDesc = new DocumentFragment();
+		const sizeInMegabytes =
+			this.plugin.MAX_LOG_FILE_SIZE_BYTES / (1024 * 1024);
+		logToFileDesc.append(
+			`Log messages to a file. File logs are stored in the plugin's '${this.plugin.LOGS_DIR_NAME}' folder.`,
+			document.createElement("br"),
+			`Max log size: ${sizeInMegabytes}MB. When the log file exceeds this size, it will be rotated and a new log file will be created.`,
+			document.createElement("br"),
+			`Max backup log files count: ${this.plugin.MAX_BACKUP_LOG_FILES}. When the max backup count is exceeded, the oldest backup log file will be deleted.`,
+		);
+
+		new Setting(containerEl)
+			.setName("Log to file")
+			.setDesc(logToFileDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.logSettings.logToFile)
+					.onChange(async (value) => {
+						this.plugin.settings.logSettings.logToFile = value;
+
+						if (FileLogger.instance) {
+							FileLogger.instance.options.enabled = value;
+						}
+
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Add timestamps")
+			.setDesc(
+				"Include timestamps in log messages. Can be helpful for debugging and understanding the sequence of events during sync.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.logSettings.addTimestamps)
+					.onChange(async (value) => {
+						this.plugin.settings.logSettings.addTimestamps = value;
+
+						if (ConsoleLogger.instance) {
+							ConsoleLogger.instance.options.addTimestamps =
+								value;
+						}
+
+						if (FileLogger.instance) {
+							FileLogger.instance.options.addTimestamps = value;
+						}
+
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Add plugin name prefix")
+			.setDesc(
+				"Include the plugin name as a prefix in log messages. \
+				This can be helpful for distinguishing logs from different plugins in the console, \
+				especially when logging is enabled for multiple plugins or logger plugins are used(like Logstravaganza).\
+				Note that the plugin name is not included in file logs since each plugin has its own log file.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.logSettings.addPluginName)
+					.onChange(async (value) => {
+						this.plugin.settings.logSettings.addPluginName = value;
+
+						if (ConsoleLogger.instance) {
+							ConsoleLogger.instance.options.addPluginName =
+								value;
+						}
+
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 }
