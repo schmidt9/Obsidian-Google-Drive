@@ -302,7 +302,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	async startSync() {
-		log(this.startSync.name);
+		log("startSync");
 
 		if (!(await checkConnection())) {
 			throw showNotice(
@@ -315,7 +315,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	async endSync(syncNotice?: Notice, retainConfigChanges = true) {
-		log(this.endSync.name);
+		log("endSync");
 
 		if (retainConfigChanges) {
 			const configFilesToSync = await this.drive.getConfigFilesToSync();
@@ -348,7 +348,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	}
 
 	stopSync(syncNotice?: Notice, hideNotice = true) {
-		log(this.stopSync.name);
+		log("stopSync");
 
 		this.ribbonIcon.removeClass("spin");
 		this.syncing = false;

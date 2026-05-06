@@ -13,7 +13,7 @@ const getHooks = (t: ObsidianGoogleDrive): Hooks => ({
 				}
 				request.headers.set(
 					"Authorization",
-					`Bearer ${t.accessToken.token}`
+					`Bearer ${t.accessToken.token}`,
 				);
 			}
 			return request;
@@ -40,7 +40,7 @@ export const getDriveKy = (t: ObsidianGoogleDrive) => {
 
 export const refreshAccessToken = async (t: ObsidianGoogleDrive) => {
 	try {
-		log(refreshAccessToken.name);
+		log("refreshAccessToken");
 
 		const { expires_in, access_token } = await ky
 			.post("https://ogd.richardxiong.com/api/access", {
@@ -56,7 +56,7 @@ export const refreshAccessToken = async (t: ObsidianGoogleDrive) => {
 	} catch (e: any) {
 		if (!(await checkConnection())) {
 			return showNotice(
-				"Something is wrong with your internet connection, so we could not fetch a new access token! Once you're back online, please restart Obsidian."
+				"Something is wrong with your internet connection, so we could not fetch a new access token! Once you're back online, please restart Obsidian.",
 			);
 		}
 		t.settings.refreshToken = "";
@@ -66,7 +66,7 @@ export const refreshAccessToken = async (t: ObsidianGoogleDrive) => {
 		};
 
 		showNotice(
-			"Something is wrong with your refresh token, please restart Obsidian and then reset it."
+			"Something is wrong with your refresh token, please restart Obsidian and then reset it.",
 		);
 		await t.saveSettings();
 		return;

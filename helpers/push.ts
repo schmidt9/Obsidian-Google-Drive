@@ -8,7 +8,7 @@ import {
 	getSyncMessage,
 } from "./drive";
 import { pull } from "./pull";
-import { PATH_KEY, splitPath } from "./path"
+import { PATH_KEY, splitPath } from "./path";
 import { showNotice, setMessage } from "./notice";
 import { log } from "./logger";
 
@@ -18,7 +18,7 @@ class ConfirmPushModal extends Modal {
 	constructor(
 		t: ObsidianGoogleDrive,
 		initialOperations: [string, "create" | "delete" | "modify"][],
-		proceed: (res: boolean) => void
+		proceed: (res: boolean) => void,
 	) {
 		super(t.app);
 		this.proceed = proceed;
@@ -27,7 +27,7 @@ class ConfirmPushModal extends Modal {
 		this.contentEl
 			.createEl("p")
 			.setText(
-				"Do you want to push the following changes to Google Drive:"
+				"Do you want to push the following changes to Google Drive:",
 			);
 		const container = this.contentEl.createEl("div");
 
@@ -55,24 +55,24 @@ class ConfirmPushModal extends Modal {
 						.map(([file]) => file)
 						.filter(
 							(file) =>
-								file.startsWith(path + "/") || file === path
+								file.startsWith(path + "/") || file === path,
 						);
 					const proceed = await new Promise<boolean>((resolve) => {
 						new ConfirmUndoModal(
 							t,
 							op,
 							nestedFiles,
-							resolve
+							resolve,
 						).open();
 					});
 
 					if (!proceed) return;
 
 					nestedFiles.forEach(
-						(file) => delete t.settings.operations[file]
+						(file) => delete t.settings.operations[file],
 					);
 					const newOperations = operations.filter(
-						([file]) => !nestedFiles.includes(file)
+						([file]) => !nestedFiles.includes(file),
 					);
 					if (!newOperations.length) return this.close();
 					render(newOperations);
@@ -84,7 +84,7 @@ class ConfirmPushModal extends Modal {
 
 		new Setting(this.contentEl)
 			.addButton((btn) =>
-				btn.setButtonText("Cancel").onClick(() => this.close())
+				btn.setButtonText("Cancel").onClick(() => this.close()),
 			)
 			.addButton((btn) =>
 				btn
@@ -93,7 +93,7 @@ class ConfirmPushModal extends Modal {
 					.onClick(() => {
 						proceed(true);
 						this.close();
-					})
+					}),
 			);
 	}
 
@@ -111,7 +111,7 @@ class ConfirmUndoModal extends Modal {
 		t: ObsidianGoogleDrive,
 		operation: "create" | "delete" | "modify",
 		files: string[],
-		proceed: (res: boolean) => void
+		proceed: (res: boolean) => void,
 	) {
 		super(t.app);
 		this.t = t;
@@ -119,7 +119,7 @@ class ConfirmUndoModal extends Modal {
 			Object.entries(this.t.settings.driveIdToPath).map(([id, path]) => [
 				path,
 				id,
-			])
+			]),
 		);
 
 		const operationMap = {
@@ -132,7 +132,7 @@ class ConfirmUndoModal extends Modal {
 		this.contentEl
 			.createEl("p")
 			.setText(
-				`Are you sure you want to undo ${operationMap[operation]} the following file(s):`
+				`Are you sure you want to undo ${operationMap[operation]} the following file(s):`,
 			);
 		this.contentEl.createEl("ul").append(
 			...files.map((file) => {
@@ -140,12 +140,12 @@ class ConfirmUndoModal extends Modal {
 				li.addClass("operation-file");
 				li.setText(file);
 				return li;
-			})
+			}),
 		);
 		this.proceed = proceed;
 		new Setting(this.contentEl)
 			.addButton((btn) =>
-				btn.setButtonText("Cancel").onClick(() => this.close())
+				btn.setButtonText("Cancel").onClick(() => this.close()),
 			)
 			.addButton((btn) =>
 				btn
@@ -164,7 +164,7 @@ class ConfirmUndoModal extends Modal {
 						}
 						proceed(true);
 						this.close();
-					})
+					}),
 			);
 	}
 
@@ -182,11 +182,11 @@ class ConfirmUndoModal extends Modal {
 		}
 
 		const pathToFile = Object.fromEntries(
-			files.map((file) => [file.properties.path, file])
+			files.map((file) => [file.properties.path, file]),
 		);
 
 		const deletedFolders = paths.filter(
-			(path) => pathToFile[path].properties.path === folderMimeType
+			(path) => pathToFile[path].properties.path === folderMimeType,
 		);
 
 		if (deletedFolders.length) {
@@ -194,13 +194,13 @@ class ConfirmUndoModal extends Modal {
 
 			for (const batch of batches) {
 				await Promise.all(
-					batch.map((folder) => this.t.createFolder(folder))
+					batch.map((folder) => this.t.createFolder(folder)),
 				);
 			}
 		}
 
 		const deletedFiles = paths.filter(
-			(path) => pathToFile[path].properties.path !== folderMimeType
+			(path) => pathToFile[path].properties.path !== folderMimeType,
 		);
 
 		await batchAsyncs(
@@ -209,14 +209,16 @@ class ConfirmUndoModal extends Modal {
 					.getFile(this.filePathToId[path])
 					.arrayBuffer();
 				if (!onlineFile) {
-					return showNotice("An error occurred fetching Google Drive files.");
+					return showNotice(
+						"An error occurred fetching Google Drive files.",
+					);
 				}
 				return this.t.createFile(
 					path,
 					onlineFile,
-					pathToFile[path].modifiedTime
+					pathToFile[path].modifiedTime,
 				);
-			})
+			}),
 		);
 	}
 
@@ -244,10 +246,10 @@ class ConfirmUndoModal extends Modal {
 export const push = async (t: ObsidianGoogleDrive) => {
 	if (t.syncing) return;
 
-	log(push.name);
+	log("push");
 
 	const initialOperations = Object.entries(t.settings.operations).sort(
-		([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)
+		([a], [b]) => (a < b ? -1 : a > b ? 1 : 0),
 	); // Alphabetical
 
 	const { vault } = t.app;
@@ -270,7 +272,10 @@ export const push = async (t: ObsidianGoogleDrive) => {
 	const modifies = operations.filter(([_, op]) => op === "modify");
 
 	const pathsToIds = Object.fromEntries(
-		Object.entries(t.settings.driveIdToPath).map(([id, path]) => [path, id])
+		Object.entries(t.settings.driveIdToPath).map(([id, path]) => [
+			path,
+			id,
+		]),
 	);
 
 	const configOnDrive = await t.drive.searchFiles({
@@ -286,20 +291,22 @@ export const push = async (t: ObsidianGoogleDrive) => {
 			if (!(await adapter.exists(properties.path))) {
 				deletes.push([properties.path, "delete"]);
 			}
-		})
+		}),
 	);
 
 	try {
 		if (deletes.length) {
 			const deleteRequest = await t.drive.batchDelete(
-				deletes.map(([path]) => pathsToIds[path])
+				deletes.map(([path]) => pathsToIds[path]),
 			);
 			if (!deleteRequest) {
-				return showNotice("An error occurred deleting Google Drive files.");
+				return showNotice(
+					"An error occurred deleting Google Drive files.",
+				);
 			}
 			deletes.forEach(([path]) => {
 				const fileId = pathsToIds[path];
-				delete t.settings.driveIdToPath[fileId]
+				delete t.settings.driveIdToPath[fileId];
 			});
 		}
 
@@ -308,11 +315,11 @@ export const push = async (t: ObsidianGoogleDrive) => {
 		if (creates.length) {
 			let completed = 0;
 			const files = creates.map(([path]) =>
-				vault.getAbstractFileByPath(path)
+				vault.getAbstractFileByPath(path),
 			);
 
 			const folders = files.filter(
-				(file) => file instanceof TFolder
+				(file) => file instanceof TFolder,
 			) as TFolder[];
 
 			if (folders.length) {
@@ -330,25 +337,32 @@ export const push = async (t: ObsidianGoogleDrive) => {
 								modifiedTime: new Date().toISOString(),
 							});
 							if (!id) {
-								return showNotice("An error occurred creating Google Drive folders.");
+								return showNotice(
+									"An error occurred creating Google Drive folders.",
+								);
 							}
 
 							completed++;
-							setMessage(syncNotice, getSyncMessage(33, 66, completed, files.length));
+							setMessage(
+								syncNotice,
+								getSyncMessage(33, 66, completed, files.length),
+							);
 
 							t.settings.driveIdToPath[id] = folder.path;
 							pathsToIds[folder.path] = id;
-						})
+						}),
 					);
 				}
 			}
 
-			const notes = files.filter((file) => file instanceof TFile) as TFile[];
+			const notes = files.filter(
+				(file) => file instanceof TFile,
+			) as TFile[];
 			const noteSizes = await Promise.all(
 				notes.map(async (note) => {
 					const stat = await adapter.stat(note.path);
 					return stat?.size || 0;
-				})
+				}),
 			);
 
 			await batchAsyncs(
@@ -362,21 +376,28 @@ export const push = async (t: ObsidianGoogleDrive) => {
 						{
 							properties: splitPath(PATH_KEY, note.path),
 							modifiedTime: new Date().toISOString(),
-						}
+						},
 					);
 					if (!id) {
-						return showNotice("An error occurred creating Google Drive files.");
+						return showNotice(
+							"An error occurred creating Google Drive files.",
+						);
 					}
 
 					completed++;
-					setMessage(syncNotice, getSyncMessage(33, 66, completed, files.length));
+					setMessage(
+						syncNotice,
+						getSyncMessage(33, 66, completed, files.length),
+					);
 
-					log(`${push.name}: uploaded ${note.path} (completed ${completed} of ${notes.length})`);
+					log(
+						`push: uploaded ${note.path} (completed ${completed} of ${notes.length})`,
+					);
 
 					t.settings.driveIdToPath[id] = note.path;
 				}),
 				t.MAX_BATCH_SIZE,
-				{ weights: noteSizes, maxBatchBytes: t.MAX_BATCH_BYTES }
+				{ weights: noteSizes, maxBatchBytes: t.MAX_BATCH_BYTES },
 			);
 		}
 
@@ -391,14 +412,14 @@ export const push = async (t: ObsidianGoogleDrive) => {
 				files.map(async (file) => {
 					const stat = await adapter.stat(file.path);
 					return stat?.size || 0;
-				})
+				}),
 			);
 
 			const pathToId = Object.fromEntries(
 				Object.entries(t.settings.driveIdToPath).map(([id, path]) => [
 					path,
 					id,
-				])
+				]),
 			);
 
 			await batchAsyncs(
@@ -406,19 +427,26 @@ export const push = async (t: ObsidianGoogleDrive) => {
 					const id = await t.drive.updateFile(
 						pathToId[file.path],
 						new Blob([await vault.readBinary(file)]),
-						{ modifiedTime: new Date().toISOString() }
+						{ modifiedTime: new Date().toISOString() },
 					);
 					if (!id) {
-						return showNotice("An error occurred modifying Google Drive files.");
+						return showNotice(
+							"An error occurred modifying Google Drive files.",
+						);
 					}
 
 					completed++;
-					setMessage(syncNotice, getSyncMessage(66, 99, completed, files.length));
+					setMessage(
+						syncNotice,
+						getSyncMessage(66, 99, completed, files.length),
+					);
 
-					log(`${push.name}: updated ${file.path} (completed ${completed} of ${files.length})`);
+					log(
+						`push: updated ${file.path} (completed ${completed} of ${files.length})`,
+					);
 				}),
 				t.MAX_BATCH_SIZE,
-				{ weights: fileSizes, maxBatchBytes: t.MAX_BATCH_BYTES }
+				{ weights: fileSizes, maxBatchBytes: t.MAX_BATCH_BYTES },
 			);
 		}
 
@@ -451,12 +479,14 @@ export const push = async (t: ObsidianGoogleDrive) => {
 							modifiedTime: new Date().toISOString(),
 						});
 						if (!id) {
-							return showNotice("An error occurred creating Google Drive folders.");
+							return showNotice(
+								"An error occurred creating Google Drive folders.",
+							);
 						}
 
 						t.settings.driveIdToPath[id] = folder;
 						pathsToIds[folder] = id;
-					})
+					}),
 				);
 			}
 		}
@@ -464,11 +494,11 @@ export const push = async (t: ObsidianGoogleDrive) => {
 		await batchAsyncs(
 			configFilesToSync.map((path) => async () => {
 				if (pathsToIds[path]) {
-					log(`${push.name}: update ${path}`);
+					log(`push: update ${path}`);
 					await t.drive.updateFile(
 						pathsToIds[path],
 						new Blob([await adapter.readBinary(path)]),
-						{ modifiedTime: new Date().toISOString() }
+						{ modifiedTime: new Date().toISOString() },
 					);
 					return;
 				}
@@ -480,23 +510,27 @@ export const push = async (t: ObsidianGoogleDrive) => {
 					{
 						properties: { path, config: "true" },
 						modifiedTime: new Date().toISOString(),
-					}
+					},
 				);
 				if (!id) {
-					return showNotice("An error occurred creating Google Drive config files.");
+					return showNotice(
+						"An error occurred creating Google Drive config files.",
+					);
 				}
 
 				t.settings.driveIdToPath[id] = path;
 				pathsToIds[path] = id;
-			})
+			}),
 		);
 
-		log(`${push.name}: update data.json`);
+		log(`push: update data.json`);
 
 		await t.drive.updateFile(
-			pathsToIds[vault.configDir + "/plugins/google-drive-sync/data.json"],
+			pathsToIds[
+				vault.configDir + "/plugins/google-drive-sync/data.json"
+			],
 			new Blob([JSON.stringify(t.settings, null, 2)]),
-			{ modifiedTime: new Date().toISOString() }
+			{ modifiedTime: new Date().toISOString() },
 		);
 
 		t.settings.operations = {};
@@ -505,16 +539,17 @@ export const push = async (t: ObsidianGoogleDrive) => {
 
 		showNotice("Sync complete!");
 	} catch (e) {
-		const errorMessage = (e instanceof Error ? e.message : String(e));
+		const errorMessage = e instanceof Error ? e.message : String(e);
 		setMessage(
 			syncNotice,
 			`An error occurred during push operation:\n${errorMessage}`,
-			false
+			false,
 		);
 
-		const logErrorMessage = (e instanceof Error ? `${e.message}\n${e.stack}` : errorMessage);
+		const logErrorMessage =
+			e instanceof Error ? `${e.message}\n${e.stack}` : errorMessage;
 		log(logErrorMessage);
 
 		t.stopSync(syncNotice, false);
 	}
-};		
+};
