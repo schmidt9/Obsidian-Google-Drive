@@ -158,6 +158,17 @@ export const pull = async (
 				({ mimeType }) => mimeType !== folderMimeType
 			);
 
+			const noteSizes = await batchAsyncs(
+				newNotes.map(({ id }) => async () => {
+					return await t.drive.getFileSize(id);
+				})
+			);
+
+			log(`Starting files download:\n${noteSizes.map(
+				(size, i) => `${newNotes[i].properties.path}: ${size} bytes`
+			).join(",\n")}`
+			);
+			
 			await batchAsyncs(
 				newNotes.map((file: FileMetadata) => async () => {
 					const localFile =
@@ -195,7 +206,9 @@ export const pull = async (
 						content,
 						file.modifiedTime
 					);
-				})
+				}),
+				t.MAX_BATCH_SIZE,
+				{ weights: noteSizes, maxBatchBytes: t.MAX_BATCH_BYTES }
 			);
 		};
 

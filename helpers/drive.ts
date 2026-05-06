@@ -345,6 +345,11 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 	const getFile = (id: string) =>
 		drive.get(`drive/v3/files/${id}?alt=media&acknowledgeAbuse=true`);
 
+	const getFileSize = async (id: string) => {
+		const result = await drive.get(`drive/v3/files/${id}?fields=size`).json<any>();
+		return Number(result.size);
+	};
+
 	const getFileMetadata = (id: string) =>
 		drive.get(`drive/v3/files/${id}`).json<FileMetadata>();
 
@@ -541,6 +546,7 @@ export const getDriveClient = (t: ObsidianGoogleDrive) => {
 		updateFileMetadata,
 		deleteFile,
 		getFile,
+		getFileSize,
 		getFileMetadata,
 		idFromPath,
 		idsFromPaths,
@@ -592,8 +598,8 @@ export const batchAsyncs = async (
 				currentBatchSize = 1;
 			}
 
-			if (currentBatchSize === 1) {
-				log(batchAsyncs.name, `Single request exceeds max batch (${maxBatchBytes} bytes): ${weights[i]} bytes`);
+			if (currentBatchSize === 1 && weights[i] > maxBatchBytes) {
+				log(batchAsyncs.name, `single file request (exceeds max batch ${maxBatchBytes} bytes): ${weights[i]} bytes`);
 			} else {	
 				log(batchAsyncs.name, `batch size: ${currentBatchSize}, batch bytes: ${batchBytes}`);
 			}
