@@ -4,7 +4,13 @@ import { pull } from "helpers/pull";
 import { push } from "helpers/push";
 import { reset } from "helpers/reset";
 import { showNotice } from "helpers/notice";
-import { ConsoleLogger, log, logError, LogSettings } from "helpers/logger";
+import {
+	ConsoleLogger,
+	FileLogger,
+	log,
+	logError,
+	LogSettings,
+} from "helpers/logger";
 import {
 	App,
 	debounce,
@@ -33,14 +39,14 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	lastSyncedAt: 0,
 	changesToken: "",
 	logSettings: {
-		enabled: true,
+		logToConsole: true,
+		logToFile: true,
 		addTimestamps: true,
 		addPluginName: false,
 	},
 };
 
 export default class ObsidianGoogleDrive extends Plugin {
-
 	// set batch size limits to avoid request timeout error for large files sent in batches
 	MAX_BATCH_SIZE = 10;
 	MAX_BATCH_BYTES = 50 * 1024 * 1024; // 50 MB per concurrent batch
@@ -62,11 +68,25 @@ export default class ObsidianGoogleDrive extends Plugin {
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		ConsoleLogger.init(this.settings.logSettings);
+		ConsoleLogger.init({
+			enabled: this.settings.logSettings.logToConsole,
+			addTimestamps: this.settings.logSettings.addTimestamps,
+			addPluginName: this.settings.logSettings.addPluginName,
+		});
+
+		FileLogger.init({
+			app: this.app,
+			enabled: this.settings.logSettings.logToFile,
+			addTimestamps: this.settings.logSettings.addTimestamps,
+			addPluginName: false, // plugin name is redundant in file logs since each plugin has its own log file
+			logDir: `${this.manifest.dir}/logs`,
+			maxBytes: 1 * 1024 * 1024, // 1 MB
+			maxBackups: 3, // keep last 3 log files
+		});
 
 		if (!this.settings.refreshToken) {
 			showNotice(
-				"Please add your refresh token to Google Drive Sync through our website or our readme/this plugin's settings. If you haven't already, PLEASE read through this plugin's readme or website CAREFULLY for instructions on how to use this plugin. If you don't know what you're doing, your data could get DELETED."
+				"Please add your refresh token to Google Drive Sync through our website or our readme/this plugin's settings. If you haven't already, PLEASE read through this plugin's readme or website CAREFULLY for instructions on how to use this plugin. If you don't know what you're doing, your data could get DELETED.",
 			);
 			return;
 		}
@@ -84,7 +104,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 						.setIcon("cloud-download")
 						.onClick(() => {
 							pull(this);
-						})
+						}),
 				);
 
 				menu.addItem((item) =>
@@ -93,7 +113,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 						.setIcon("cloud-upload")
 						.onClick(() => {
 							push(this);
-						})
+						}),
 				);
 				menu.addItem((item) =>
 					item
@@ -101,10 +121,10 @@ export default class ObsidianGoogleDrive extends Plugin {
 						.setIcon("triangle-alert")
 						.onClick(() => {
 							reset(this);
-						})
+						}),
 				);
 				menu.showAtMouseEvent(event);
-			}
+			},
 		);
 
 		this.addCommand({
@@ -126,7 +146,9 @@ export default class ObsidianGoogleDrive extends Plugin {
 		});
 
 		this.app.workspace.onLayoutReady(() =>
-			this.registerEvent(vault.on("create", this.handleCreate.bind(this)))
+			this.registerEvent(
+				vault.on("create", this.handleCreate.bind(this)),
+			),
 		);
 		this.registerEvent(vault.on("delete", this.handleDelete.bind(this)));
 		this.registerEvent(vault.on("modify", this.handleModify.bind(this)));
@@ -146,7 +168,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData()
+			await this.loadData(),
 		);
 	}
 
@@ -221,7 +243,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	async createFile(
 		path: string,
 		content: ArrayBuffer,
-		modificationDate?: number | string | Date
+		modificationDate?: number | string | Date,
 	) {
 		const oldOperation = this.settings.operations[path];
 		if (typeof modificationDate === "string") {
@@ -241,7 +263,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	async modifyFile(
 		file: TFile,
 		content: ArrayBuffer,
-		modificationDate?: number | string | Date
+		modificationDate?: number | string | Date,
 	) {
 		const oldOperation = this.settings.operations[file.path];
 		if (typeof modificationDate === "string") {
@@ -261,7 +283,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 	async upsertFile(
 		file: string,
 		content: ArrayBuffer,
-		modificationDate?: number | string | Date
+		modificationDate?: number | string | Date,
 	) {
 		const oldOperation = this.settings.operations[file];
 		if (typeof modificationDate === "string") {
@@ -290,7 +312,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 
 		if (!(await checkConnection())) {
 			throw showNotice(
-				"You are not connected to the internet, so you cannot sync right now. Please try syncing once you have connection again."
+				"You are not connected to the internet, so you cannot sync right now. Please try syncing once you have connection again.",
 			);
 		}
 		this.ribbonIcon.addClass("spin");
@@ -311,9 +333,9 @@ export default class ObsidianGoogleDrive extends Plugin {
 					this.app.vault.adapter.writeBinary(
 						file,
 						await this.app.vault.adapter.readBinary(file),
-						{ mtime: Date.now() }
-					)
-				)
+						{ mtime: Date.now() },
+					),
+				),
 			);
 		} else {
 			this.settings.lastSyncedAt = Date.now();
@@ -322,7 +344,7 @@ export default class ObsidianGoogleDrive extends Plugin {
 		const changesToken = await this.drive.getChangesStartToken();
 		if (!changesToken) {
 			return showNotice(
-				"An error occurred fetching Google Drive changes token."
+				"An error occurred fetching Google Drive changes token.",
 			);
 		}
 		this.settings.changesToken = changesToken;
@@ -330,8 +352,8 @@ export default class ObsidianGoogleDrive extends Plugin {
 
 		this.stopSync(syncNotice);
 	}
-	
-	stopSync(syncNotice?: Notice, hideNotice: boolean = true) {
+
+	stopSync(syncNotice?: Notice, hideNotice = true) {
 		log(this.stopSync.name);
 
 		this.ribbonIcon.removeClass("spin");
@@ -365,7 +387,7 @@ class SettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Refresh token")
 			.setDesc(
-				"A refresh token is required to access your Google Drive for syncing. We suggest cloning your Google Drive vault to the current vault BEFORE syncing."
+				"A refresh token is required to access your Google Drive for syncing. We suggest cloning your Google Drive vault to the current vault BEFORE syncing.",
 			)
 			.addText((text) => {
 				const cancel = async () => {
@@ -392,7 +414,7 @@ class SettingsTab extends PluginSettingTab {
 						) {
 							showNotice(
 								"Your current vault is not empty! If you want our plugin to handle the initial sync, you have to clear out the current vault. Check the readme or website for more details.",
-								0
+								0,
 							);
 							return await cancel();
 						}
@@ -401,14 +423,14 @@ class SettingsTab extends PluginSettingTab {
 							await this.plugin.drive.getChangesStartToken();
 						if (!changesToken) {
 							return showNotice(
-								"An error occurred fetching Google Drive changes token."
+								"An error occurred fetching Google Drive changes token.",
 							);
 						}
 						this.plugin.settings.changesToken = changesToken;
 
 						await this.plugin.saveSettings();
-						showNotice (
-							"Refresh token saved! Reload Obsidian to activate sync."
+						showNotice(
+							"Refresh token saved! Reload Obsidian to activate sync.",
 						);
 					});
 			});
